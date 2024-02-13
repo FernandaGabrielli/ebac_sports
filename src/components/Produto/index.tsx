@@ -1,40 +1,42 @@
-import { useSelector } from 'react-redux'
-import { Produto as ProdutoType } from '../App'
-import Produto from '../components/Produto'
-
+import { Produto as ProdutoType } from '../../App'
+import { adicionar } from '../../store/reducers/carrinho'
+import { favoritar } from '../../store/reducers/favoritos'
 import * as S from './styles'
-import { RootReducer } from '../store'
-import { useGetProdutosQuery } from '../services/api'
 
-const ProdutosComponent = () => {
-  const { data: produtos, isLoading } = useGetProdutosQuery()
+import { useDispatch } from 'react-redux'
 
-  const itensFavoritos = useSelector(
-    (state: RootReducer) => state.favoritos.itens
+type Props = {
+  produto: ProdutoType
+  estaNosFavoritos: boolean
+}
+
+export const paraReal = (valor: number) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+    valor
   )
 
-  const produtoEstaNosFavoritos = (produto: ProdutoType) => {
-    const produtoId = produto.id
-    const IdsDosFavoritos = itensFavoritos.map((f) => f.id)
-
-    return IdsDosFavoritos.includes(produtoId)
-  }
-
-  if (isLoading) return <h2>Carregando...</h2>
+const ProdutoComponent = ({ produto, estaNosFavoritos }: Props) => {
+  const dispatch = useDispatch()
 
   return (
-    <>
-      <S.Produtos>
-        {produtos?.map((produto) => (
-          <Produto
-            estaNosFavoritos={produtoEstaNosFavoritos(produto)}
-            key={produto.id}
-            produto={produto}
-          />
-        ))}
-      </S.Produtos>
-    </>
+    <S.Produto>
+      <S.Capa>
+        <img src={produto.imagem} alt={produto.nome} />
+      </S.Capa>
+      <S.Titulo>{produto.nome}</S.Titulo>
+      <S.Prices>
+        <strong>{paraReal(produto.preco)}</strong>
+      </S.Prices>
+      <S.BtnComprar onClick={() => dispatch(favoritar(produto))} type="button">
+        {estaNosFavoritos
+          ? '- Remover dos favoritos'
+          : '+ Adicionar aos favoritos'}
+      </S.BtnComprar>
+      <S.BtnComprar onClick={() => dispatch(adicionar(produto))} type="button">
+        Adicionar ao carrinho
+      </S.BtnComprar>
+    </S.Produto>
   )
 }
 
-export default ProdutosComponent
+export default ProdutoComponent
